@@ -528,7 +528,7 @@ fpi_sdcp_device_delete_cached_claim (FpiSdcpDevice *self)
 
   path = fpi_sdcp_device_get_cached_claim_path (self);
 
-  if (!g_file_test (path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR))
+  if (!path || !g_file_test (path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR))
     return;
 
   file = g_file_new_for_path (path);
@@ -1135,6 +1135,23 @@ fpi_sdcp_device_is_connected (FpiSdcpDevice *device)
     return FALSE;
 
   return !sdcp_is_claim_expired (device);
+}
+
+/**
+ * fpi_sdcp_device_reset_claim:
+ * @device: The #FpiSdcpDevice
+ *
+ * Discards any in-memory or cached connection claim and generates fresh host
+ * keys, so that the next fpi_sdcp_device_is_connected() returns %FALSE and the
+ * driver performs a full SDCP `Connect`. Use this when the device may have
+ * dropped its side of the session (e.g. after idle, suspend or a crash), as a
+ * stale claim otherwise makes every AuthorizedIdentity check fail.
+ */
+void
+fpi_sdcp_device_reset_claim (FpiSdcpDevice *device)
+{
+  fpi_sdcp_device_delete_cached_claim (device);
+  fpi_sdcp_set_host_keys (device, NULL, NULL);
 }
 
 /**

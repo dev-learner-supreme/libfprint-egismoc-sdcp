@@ -211,6 +211,7 @@ driver_helper_mapping = {
     'aes3500' : [ 'aeslib', 'aes3k' ],
     'aes4000' : [ 'aeslib', 'aes3k' ],
     'uru4000' : [ 'openssl' ],
+    'egismoc' : [ 'openssl' ],
     'elanspi' : [ 'udev' ],
     'virtual_image'          : [ 'virtual' ],
     'virtual_device'         : [ 'virtual' ],
@@ -295,8 +296,11 @@ endif
 if install_udev_rules
     udev_rules_dir = get_option('udev_rules_dir')
     if udev_rules_dir == 'auto'
-        udev_dep = dependency('udev')
-        udev_rules_dir = udev_dep.get_variable(pkgconfig: 'udevdir') + '/rules.d'
+        udev_dep = dependency('libudev')
+        udev_rules_dir = udev_dep.get_variable(
+        	pkgconfig: 'udevdir',
+        	default_value: '/lib/udev'
+        ) + '/rules.d'
     endif
 endif
 
@@ -319,7 +323,7 @@ root_inc = include_directories('.')
 udev_hwdb = get_option('udev_hwdb')
 if not udev_hwdb.disabled()
     # systemd v248 includes our autosuspend rules
-    udev_versioned_dep = dependency('udev', version: '>= 248', required: false)
+    udev_versioned_dep = dependency('libudev', version: '>= 248', required: false)
     udev_hwdb_dir = get_option('udev_hwdb_dir')
     if udev_hwdb.auto()
         if udev_versioned_dep.found()
@@ -332,8 +336,11 @@ if not udev_hwdb.disabled()
     endif
 
     if udev_hwdb_dir == 'auto'
-        udev_dep = dependency('udev')
-        udev_hwdb_dir = udev_dep.get_variable(pkgconfig: 'udevdir') + '/hwdb.d'
+        udev_dep = dependency('libudev')
+        udev_hwdb_dir = udev_dep.get_variable(
+        	pkgconfig: 'udevdir',
+        	default_value: '/lib/udev'
+        ) + '/hwdb.d'
     endif
 else
     udev_hwdb_dir = ''
